@@ -2,6 +2,8 @@ import requests
 import argparse
 import logging
 
+DEFAULT_LOC = 'tx/houston'
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
@@ -10,6 +12,11 @@ if __name__ == '__main__':
     parser.add_argument('--header', help='User can enter a header for the program to search through', type=str,
                         required=False)
     args = parser.parse_args()
+    assert args.header is None or isinstance(args.header, str)
+    if args.header:
+        pass
+    else:
+        args.header = DEFAULT_LOC
     r = requests.get('https://www.coldwellbankerhomes.com/{}'.format(args.header))
     if r.status_code == 200:
         logging.info('Successfully connected!')
