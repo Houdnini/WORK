@@ -1,8 +1,45 @@
 import requests
 import argparse
 import logging
+import pandas
+from bs4 import BeautifulSoup
 
 DEFAULT_LOC = 'tx/houston'
+
+
+def scrapper(r):
+    l = []
+    c = r.content
+    soup = BeautifulSoup(c, 'html.parser')
+    all = soup.find_all('div', {'class': 'property-snapshot-psr-panel'})
+    for i in range(0, len(all)):
+        d = {}
+        d['street'] = all[i].find('span', {'class': 'street-address'}).text
+        d['zip'] = all[i].find('span', {'class': 'city-st-zip city-zip-space'}).text
+        d['price'] = all[i].find('div', {'class': 'price-normal'}).text
+        try:
+            d['beds'] = all[i].find('li', {'class': 'beds'}).find('div').text
+        except:
+            pass
+        try:
+            d['total_baths'] = all[i].find('li', {'class': 'total-baths'}).find('div').text
+        except:
+            pass
+        try:
+            d['sqrft'] = all[i].find('li', {'class': 'sq.-ft.'}).text
+        except:
+            pass
+        try:
+            d['garage'] = all[i].find('li', {'class': 'car-garage'}).find('div').text
+        except:
+            pass
+        l.append(d)
+    return l
+
+
+def creation_of_table(data):
+    df = pandas.DataFrame(data)
+    logging.info(df)
 
 
 if __name__ == '__main__':
@@ -18,8 +55,22 @@ if __name__ == '__main__':
     else:
         args.header = DEFAULT_LOC
     r = requests.get('https://www.coldwellbankerhomes.com/{}'.format(args.header))
-    if r.status_code == 200:
-        logging.info('Successfully connected!')
-    else:
-        logging.info(r.status_code)
+    c = r.content
+    soup = BeautifulSoup(c, 'html.parser')
+    current_page = soup.find('a', {'class': 'disabled'}).text
+    while True:
+        new_web = requests.get('https://www.coldwellbankerhomes.com/{}//?sortId={}'.format(args.header, current_page))
+        if r.status_code == 200:
+            logging.info('Successfully connected!')
+            creation_of_table(scrapper(new_web))
+        else:
+            logging.info(r.status_code)
+            break
+        current_page = int(current_page) + 1
+        if current_page > 3:
+            break
+        str(current_page)
+
+
+
 
