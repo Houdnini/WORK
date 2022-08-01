@@ -5,6 +5,7 @@ import pandas
 from bs4 import BeautifulSoup
 
 DEFAULT_LOC = 'tx/houston'
+url = r'https://www.coldwellbankerhomes.com'
 
 
 def scrapper(r):
@@ -14,9 +15,18 @@ def scrapper(r):
     all = soup.find_all('div', {'class': 'property-snapshot-psr-panel'})
     for i in range(0, len(all)):
         d = {}
-        d['street'] = all[i].find('span', {'class': 'street-address'}).text
-        d['zip'] = all[i].find('span', {'class': 'city-st-zip city-zip-space'}).text
-        d['price'] = all[i].find('div', {'class': 'price-normal'}).text
+        try:
+            d['street'] = all[i].find('span', {'class': 'street-address'}).text
+        except:
+            pass
+        try:
+            d['zip'] = all[i].find('span', {'class': 'city-st-zip city-zip-space'}).text
+        except:
+            pass
+        try:
+            d['price'] = all[i].find('div', {'class': 'price-normal'}).text
+        except:
+            pass
         try:
             d['beds'] = all[i].find('li', {'class': 'beds'}).find('div').text
         except:
@@ -54,12 +64,12 @@ if __name__ == '__main__':
         pass
     else:
         args.header = DEFAULT_LOC
-    r = requests.get('https://www.coldwellbankerhomes.com/{}'.format(args.header))
+    r = requests.get('{}/{}'.format(url, args.header))
     c = r.content
     soup = BeautifulSoup(c, 'html.parser')
     current_page = soup.find('a', {'class': 'disabled'}).text
     while True:
-        new_web = requests.get('https://www.coldwellbankerhomes.com/{}//?sortId={}'.format(args.header, current_page))
+        new_web = requests.get('{}/{}/?sortId={}'.format(url, args.header, current_page))
         if r.status_code == 200:
             logging.info('Successfully connected!')
             creation_of_table(scrapper(new_web))
