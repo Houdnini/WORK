@@ -80,7 +80,3 @@ if __name__ == '__main__':
         if current_page > 3:
             break
         str(current_page)
-
-
-
-
